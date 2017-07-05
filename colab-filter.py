@@ -5,7 +5,7 @@ from math import sqrt
 
 def pearson_correlation(user, other):
 
-   # To get both rated items
+   # Pegar Itens que foram classificados
     both_rated = {}
     for item in dataset[user]:
         if item in dataset[other]:
@@ -13,22 +13,22 @@ def pearson_correlation(user, other):
 
     number_of_ratings = len(both_rated)
 
-    # Checking for ratings in common
+    # Ver se tem clasificações em comum
     if number_of_ratings == 0:
         return 0
 
-    # Add up all the preferences of each user
+    # Preferências por usuário
     user_preferences_sum = sum([dataset[user][item] for item in both_rated])
     other_preferences_sum = sum([dataset[other][item] for item in both_rated])
 
-    # Sum up the squares of preferences of each user
+    # Somo dos quadrados das preferencias de cada usuário
     user_square_preferences_sum = sum([pow(dataset[user][item],2) for item in both_rated])
     other_square_preferences_sum = sum([pow(dataset[other][item],2) for item in both_rated])
 
-    # Sum up the product value of both preferences for each item
+    # Soma do produto de cada item
     product_sum_of_both_users = sum([dataset[user][item] * dataset[other][item] for item in both_rated])
 
-    # Calculate the pearson score
+    # Calculando o coeficiente de pearson com os resultados obtidos
     numerator_value = product_sum_of_both_users - (user_preferences_sum*other_preferences_sum/number_of_ratings)
     denominator_value = sqrt((user_square_preferences_sum - pow(user_preferences_sum,2)/number_of_ratings) * (other_square_preferences_sum -pow(other_preferences_sum,2)/number_of_ratings))
 
@@ -38,41 +38,40 @@ def pearson_correlation(user, other):
         r = numerator_value / denominator_value
         return r
 
+# retorna o numero de usuário vizinhos desejados
 def most_similar_users(user, number_of_users):
 
-    # returns the number_of_users (similar users) for a given specific user
     scores = [(pearson_correlation(user, other_user), other_user) for other_user in dataset if other_user != user]
 
-    # Sort the similar users so the highest scores user will appear at the first
     scores.sort()
     scores.reverse()
     return scores[0:number_of_users]
 
 def get_recommendations(person):
 
-    #Gets recommendations for a person by using a weighted average of every other users rankings
+    #Pega as recomendações por usuário usando média ponderada
     totals = {}
     simSums = {}
     recommendataions_list = []
 
     for other in dataset:
-        # don't compare me to myself
+        # não comparar com ele mesmo
         if other == person:
             continue
         sim = pearson_correlation(person,other)
 
-        # ignore scores of zero or lower
+        # ignora pessoas pouco semelhantes (com score < 0)
         if sim <=0: 
             continue
         for item in dataset[other]:
 
-            # only score movies i haven't seen yet
+            # faz a predição somente para filmes não vistos
             if item not in dataset[person]:
 
             # Similrity * score
                 totals.setdefault(item,0)
                 totals[item] += dataset[other][item]* sim
-                # sum of similarities
+                # soma dos similares
                 simSums.setdefault(item,0)
                 simSums[item]+= sim
 
@@ -82,15 +81,15 @@ def get_recommendations(person):
     rankings.sort()
     rankings.reverse()
 
-    print 'Media Ponderada: ', rankings
+    #print 'Media Ponderada: ', rankings
 
     for movie in rankings:
         if movie[0] > 3:
             recommendataions_list.append(movie[1])
 
     # returns the recommended items
-    print 'Recomendacao: ', recommendataions_list
+    #print 'Recomendacao: ', recommendataions_list
     return recommendataions_list
 
-get_recommendations('Clara')
+print get_recommendations('Clara')
 #print most_similar_users('Clara', 4)
